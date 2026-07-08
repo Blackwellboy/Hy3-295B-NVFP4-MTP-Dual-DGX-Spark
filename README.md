@@ -133,10 +133,10 @@ Set `ENABLE_TOOLS=1` in `.env` on both nodes and relaunch — the entrypoint app
 
 Packaging and bring-up notes — the hard discovery work is theirs:
 - [**kodelow**](https://huggingface.co/kodelow/Hy3-NVFP4-W4A16) — NVFP4 W4A16 quant (experts-only, MTP preserved).
-- [**Tony DeAngelo / tonyd2wild**](https://github.com/tonyd2wild/Hy3-295B-NVFP4-MTP-2x-DGX-Spark) — 2×-Spark Hy3 recipe, MTP + `enforce-eager` + `spec-1`, the `:opensource` parser fix.
+- [**tonyd2wild**](https://github.com/tonyd2wild/DeepSeek-v4-Flash-DSpark-1M-NVFP4-KV-2x-DGX-Spark) — methodology and dual-Spark packaging approach this repo's structure is modeled on (his DeepSeek-V4-Flash 2-Spark NVFP4 recipe).
 - [**Mia / MiaAI-Lab**](https://github.com/MiaAI-Lab) — the dual-Spark `start.sh`/`stop.sh` + `mp` multi-node pattern this is modelled on.
 - [**eugr / spark-vllm-docker**](https://github.com/eugr/spark-vllm-docker) — the CUDA-13.0 GB10 vLLM image that avoids the marlin FP4 PTX error.
-- **jasl** — GB10 / SM121 vLLM enablement.
+- [**jasl**](https://github.com/jasl) — GB10 / SM121 vLLM enablement.
 - [**Tencent Hunyuan Team**](https://huggingface.co/tencent/Hy3) — Hy3 (Apache 2.0).
 
 ## License
