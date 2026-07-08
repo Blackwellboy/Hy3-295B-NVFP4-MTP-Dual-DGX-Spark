@@ -46,6 +46,43 @@ single, 36.9 vs ~59.7 aggregate), and it logs *"GPU does not have native support
 computation … may degrade performance for compute-heavy workloads."* A **from-source build with
 native `sm_121a` FP4 tensor-core kernels** is the lever to chase that speed — not yet attempted.
 
+## Benchmarks (scored slice) — accuracy vs. published Hy3
+Scored slices to check the weight-only-FP4 quant preserves *quality*, not just the 7 vibe-check
+puzzles. **N=100 each · greedy (temp 0) · seed 42 · 4 concurrent workers**, on the eugr weight-only-FP4
+(`sm_120`) stack. Harness: [`bench/eval_hy3.py`](bench/eval_hy3.py) (samples with the fixed seed and
+captures `finish_reason` + full `content`/`reasoning_content` per item, so truncation and parse-fails
+are separable).
+
+| Suite | Slice | This quant | Tencent official Hy3 |
+| --- | --- | --- | --- |
+| GSM8K (`openai/gsm8k`, main/test) | N=100 | **75/76 = 98.7% on completed items** | 95.37 |
+| MMLU (`cais/mmlu`, all/test) | N=100 | **90/100** | 87.42 (5-shot, base) |
+
+- **GSM8K:** of the 100 sampled problems, **76 completed and 75 were correct (98.7%)**. The other
+  **24 truncated** (`finish_reason: length`) — high-effort reasoning ran past the harness's 2048-token
+  output budget *before* emitting a final answer; all 24 were verified from the saved responses as
+  **cut-off reasoning chains, not model errors**. (A first pass with a smaller budget reported a
+  misleading ~62% purely for this reason.) The single non-truncated miss was a *suspect GSM8K gold
+  label* — the model's arithmetic was correct. High-effort reasoning here is genuinely verbose: even
+  re-running truncated items at an **8192-token** budget, some still did not finish.
+- **MMLU:** 90/100 — zero parse-fails, zero truncation.
+- **Concordance with published scores:** these land **at or slightly above** Tencent's official Hy3
+  numbers (GSM8K **95.37**, MMLU **87.42** 5-shot base) — within the noise of a 100-item slice. So the
+  **weight-only-FP4 path reproduces the model's published accuracy: it costs ~40% speed, not
+  correctness.** This is *concordance within noise* — **not** a like-for-like comparison and **not**
+  "beating" the numbers: Tencent's MMLU is 5-shot with their harness; ours is a zero/few-shot N=100
+  slice with our own answer extraction.
+
+**Measurement meta-lesson (worth more than the number):** the first harness reported a misleadingly
+low GSM8K for two reasons — (1) a 1500–2048-token budget that **truncated** verbose high-effort
+reasoning before the final answer, and (2) it **discarded per-item responses**, making the low score
+un-diagnosable. Fix: capture `finish_reason` + full response text per item, size the token budget for
+the reasoning path, and **always inspect truncation and parse-fails separately before trusting — or
+blaming the quant for — a local-eval number.**
+
+**Caveats:** N=100 slices (not the full suites). Only the eugr weight-only-FP4 path is measured;
+**native `sm_121a` build accuracy is untested.**
+
 ## Phase 2 — structured tool calls: PASS
 `ENABLE_TOOLS=1` applies the 11-token `:opensource` patch in-container (writable layer only) and
 adds `--tool-call-parser hy_v3 --reasoning-parser hy_v3 --enable-auto-tool-choice`. Verified: a

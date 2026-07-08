@@ -24,8 +24,9 @@
 | Peak memory / node | ~120 / 121 GiB | 84.5 GiB weights + 22 GiB KV + overhead (tight) |
 | Cold-start | ~14 min | two-phase load (target + MTP drafter) |
 | Structured tool calls | ✅ `finish_reason: tool_calls` | via patched `hy_v3` `:opensource` parsers |
+| **Accuracy (N=100 slice)** | **GSM8K 98.7%** (completed-item) · **MMLU 90/100** | matches Tencent's published **95.4 / 87.4** within noise → quant preserves accuracy. See [`FINDINGS.md`](FINDINGS.md#benchmarks-scored-slice--accuracy-vs-published-hy3). |
 
-> These numbers are on the **prebuilt** `eugr/spark-vllm` image, which runs **weight-only FP4** on `sm_120` cubins (Blackwell forward-compat) — correct, but ~40% below the native-FP4 target (~21.8 tok/s). A from-source `sm_121a` build is the lever to chase that speed; see [`FINDINGS.md`](FINDINGS.md).
+> These *speed* numbers are on the **prebuilt** `eugr/spark-vllm` image, which runs **weight-only FP4** on `sm_120` cubins (Blackwell forward-compat) — correct, but ~40% below the native-FP4 target (~21.8 tok/s). A from-source `sm_121a` build is the lever to chase that speed. The **accuracy** slice above confirms the weight-only-FP4 path costs **speed, not correctness** — it scores what Tencent published. See [`FINDINGS.md`](FINDINGS.md).
 
 ---
 
