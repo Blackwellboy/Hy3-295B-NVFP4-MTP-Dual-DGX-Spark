@@ -1,0 +1,35 @@
+# Hy3-295B NVFP4 on 2x DGX Spark (GB10) — vLLM, TP=2, mp multi-node.
+# STANDALONE compose project "hy3". The SAME file runs on both nodes; NODE_RANK in
+# each node's .env picks head(0)/worker(1). Driven by ./start.sh from the head over SSH.
+name: hy3
+
+services:
+  vllm:
+    # Use an image whose DEFAULT ptxas/nvcc is CUDA 13.0 (matches the GB10 driver) —
+    # a newer default toolchain triggers cudaErrorUnsupportedPtxVersion in the marlin FP4 path.
+    image: ${VLLM_IMAGE:-eugr/spark-vllm:latest}
+    container_name: hy3-vllm
+    restart: "no"                # no auto-restart during bring-up (avoid crash-loops masking failures)
+    env_file: .env
+    network_mode: host           # NCCL/RoCE over the 200G fabric directly
+    ipc: host
+    privileged: true
+    shm_size: "32gb"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      # 181GB NVFP4 weights live on LOCAL NVMe (bind them in :ro). Not the HF cache.
+      - ${MODEL_DIR:-/path/to/Hy3-NVFP4-W4A16}:/models:ro
+      - ${HF_CACHE:-~/.cache/huggingface}:/cache/huggingface
+      # corrected entrypoint + parser patch, mounted at runtime (image untouched)
+      - ./scripts/entrypoint.sh:/opt/hy3/entrypoint.sh:ro
+      - ./scripts/patch_hy3_parsers.sh:/opt/hy3/patch_hy3_parsers.sh:ro
+    entrypoint: ["/bin/bash", "/opt/hy3/entrypoint.sh"]

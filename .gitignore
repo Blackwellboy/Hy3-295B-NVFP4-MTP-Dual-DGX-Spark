@@ -1,0 +1,11 @@
+# never commit environment files (may hold real fabric IPs / hosts)
+.env
+.env.*
+!.env.example
+
+*.orig
+*.bak
+*.bak.*
+__pycache__/
+*.pyc
+.DS_Store
