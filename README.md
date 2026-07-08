@@ -40,7 +40,7 @@
 **Software**
 - Docker + `docker compose` v2.24+, NVIDIA Container Toolkit (default on DGX Spark)
 - **Passwordless SSH from head → worker** (`ssh $WORKER_HOST hostname` must work)
-- GPU driver **580.x / CUDA 13.0** and a vLLM image whose default `ptxas` is **CUDA 13.0** (see below)
+- GPU driver **580.159.03 / CUDA 13.0** and a vLLM image whose default `ptxas` is **CUDA 13.0** (see below)
 
 ---
 

@@ -1,7 +1,7 @@
 # FINDINGS — Hy3-295B NVFP4 on 2× DGX Spark (GB10)
 
 Real, measured results from bring-up. Hardware: 2× DGX Spark (GB10, SM_121 / cc 12.1,
-arm64), 200G ConnectX-7 fabric, GPU driver 580.x / CUDA 13.0. Model:
+arm64), 200G ConnectX-7 fabric, GPU driver 580.159.03 / CUDA 13.0. Model:
 `kodelow/Hy3-NVFP4-W4A16` (Tencent Hunyuan3 295B MoE / 21B active, W4A16 NVFP4, MTP layer),
 181 GB, TP=2, mp multi-node (`--headless` worker), `--enforce-eager`, fp8_e4m3 KV, MTP spec-1.
 
@@ -12,7 +12,7 @@ arm64), 200G ConnectX-7 fabric, GPU driver 580.x / CUDA 13.0. Model:
 
 ### Why a mismatched-toolchain image FAILS (the 222 story)
 A prebuilt NVFP4 image can have HYV3 + hy_v3 parsers + marlin and still fail: if its **default
-`ptxas` is a newer CUDA (e.g. 13.2/13.3)** than the 580.x / CUDA-13.0 driver's PTX-JIT accepts,
+`ptxas` is a newer CUDA (e.g. 13.2/13.3)** than the 580.159.03 / CUDA-13.0 driver's PTX-JIT accepts,
 the NVFP4-MoE marlin repack (`marlin_utils_fp4.py: repack_weight`) triggers a runtime JIT that the
 driver rejects:
 ```
@@ -51,7 +51,9 @@ Scored slices to check the weight-only-FP4 quant preserves *quality*, not just t
 puzzles. **N=100 each · greedy (temp 0) · seed 42 · 4 concurrent workers**, on the eugr weight-only-FP4
 (`sm_120`) stack. Harness: [`bench/eval_hy3.py`](bench/eval_hy3.py) (samples with the fixed seed and
 captures `finish_reason` + full `content`/`reasoning_content` per item, so truncation and parse-fails
-are separable).
+are separable). A sanitized 5-item sample of that captured per-item JSONL is in
+[`bench/sample_gsm8k.jsonl`](bench/sample_gsm8k.jsonl) (4 completed + 1 truncated, to show the
+`finish_reason` capture); the full per-item data regenerates by re-running the harness.
 
 | Suite | Slice | This quant | Tencent official Hy3 |
 | --- | --- | --- | --- |
